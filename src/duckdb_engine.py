@@ -3,12 +3,11 @@ import polars as pl
 from typing import List, Dict, Any
 
 class DuckDBAnalyticsEngine:
-    """موتور پردازش کوئری‌های تحلیلی OLAP با DuckDB"""
+    """موتور پردازش کوئری‌های تحلیلی OLAP با DuckDB بدون نیاز به پانداس"""
     def __init__(self):
         self.con = duckdb.connect(database=':memory:')
 
     def query_sensor_metrics(self, df: pl.DataFrame) -> List[Dict[str, Any]]:
-        # ثبت مستقیم دیتافریم در حافظه DuckDB بدون overhead
         self.con.register("telemetry_data", df.to_arrow())
 
         query = """
@@ -22,5 +21,5 @@ class DuckDBAnalyticsEngine:
             GROUP BY sensor_id
             ORDER BY sensor_id;
         """
-        result = self.con.execute(query).fetchdf()
-        return result.to_dict(orient="records")
+        # دریافت مستقیم به صورت Polars DataFrame و تبدیل به لیست دیکشنری
+        return self.con.execute(query).pl().to_dicts()
