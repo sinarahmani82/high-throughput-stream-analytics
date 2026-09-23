@@ -1,4 +1,5 @@
 import time
+import polars as pl
 from tabulate import tabulate
 from src.stream_generator import TelemetryStreamGenerator
 from src.polars_pipeline import PolarsStreamProcessor
@@ -29,8 +30,9 @@ def main():
 
     # تحلیل داده‌ها با DuckDB
     duck_engine = DuckDBAnalyticsEngine()
-    analytics_results = duck_engine.query_sensor_metrics(agg_df)
-
+    raw_df = pl.from_arrow(arrow_batch)
+    analytics_results = duck_engine.query_sensor_metrics(raw_df)
+    
     print("--- In-Process OLAP Analytical Results (DuckDB) ---")
     table_data = [[r["sensor_id"], r["mean_temperature"], r["mean_voltage"], r["p95_vibration"], f"{r['total_events']:,}"] for r in analytics_results]
     print(tabulate(table_data, headers=["Sensor ID", "Avg Temp (°C)", "Avg Voltage (V)", "P95 Vibration", "Events"], tablefmt="grid"))
